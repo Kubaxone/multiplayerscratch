@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Scratch+ Multiplayer</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#1e1e2e;color:#cdd6f4;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+#topbar{background:#313244;padding:6px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #45475a;flex-shrink:0;flex-wrap:wrap}
+.logo{font-weight:700;font-size:15px;color:#cba6f7}
+.sep{width:1px;height:20px;background:#45475a}
+.tbtn{background:#45475a;border:none;color:#cdd6f4;padding:5px 11px;border-radius:6px;cursor:pointer;font-size:12px;transition:background .15s}
+.tbtn:hover{background:#585b70}
+.tbtn.green{background:#a6e3a1;color:#1e1e2e}
+.tbtn.red{background:#f38ba8;color:#1e1e2e}
+.tbtn.blue{background:#89b4fa;color:#1e1e2e}
+.tbtn.purple{background:#cba6f7;color:#1e1e2e}
+#room-section{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.room-box{background:#11111b;border:1px solid #45475a;border-radius:6px;padding:4px 10px;font-size:11px;display:flex;align-items:center;gap:6px}
+.room-code{font-weight:700;color:#cba6f7;letter-spacing:2px;font-size:13px}
+.peer-list{display:flex;gap:4px;align-items:center}
+.avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:2px solid #1e1e2e;cursor:default;position:relative}
+.avatar:hover .avatar-tip{display:block}
+.avatar-tip{display:none;position:absolute;top:30px;left:50%;transform:translateX(-50%);background:#313244;border:1px solid #45475a;border-radius:4px;padding:3px 7px;font-size:10px;white-space:nowrap;z-index:999}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.status-dot.connected{background:#a6e3a1}
+.status-dot.connecting{background:#f9e2af;animation:pulse 1s infinite}
+.status-dot.disconnected{background:#f38ba8}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+#join-modal{position:fixed;inset:0;background:#00000099;display:flex;align-items:center;justify-content:center;z-index:2000}
+#join-modal.hidden{display:none}
+.modal-card{background:#313244;border:1px solid #45475a;border-radius:14px;padding:28px 32px;width:360px;max-width:95vw}
+.modal-card h2{font-size:18px;margin-bottom:6px;color:#cba6f7}
+.modal-card p{font-size:12px;color:#6c7086;margin-bottom:20px}
+.mrow{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.mrow label{font-size:11px;color:#bac2de}
+.mrow input{background:#11111b;border:1px solid #45475a;color:#cdd6f4;padding:8px 12px;border-radius:8px;font-size:13px;outline:none}
+.mrow input:focus{border-color:#cba6f7}
+.modal-btns{display:flex;gap:8px;margin-top:18px}
+.modal-btns button{flex:1;padding:9px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:opacity .2s}
+.modal-btns button:hover{opacity:.85}
+.mbtn-create{background:#cba6f7;color:#1e1e2e}
+.mbtn-join{background:#89b4fa;color:#1e1e2e}
+.mbtn-cancel{background:#45475a;color:#cdd6f4}
+.or-divider{text-align:center;color:#6c7086;font-size:11px;margin:14px 0;position:relative}
+.or-divider::before,.or-divider::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:#45475a}
+.or-divider::before{left:0}.or-divider::after{right:0}
+#main{display:flex;flex:1;overflow:hidden}
+#palette{width:200px;background:#181825;border-right:1px solid #313244;display:flex;flex-direction:column;flex-shrink:0}
+.ptabs{display:flex;flex-wrap:wrap;background:#11111b;border-bottom:1px solid #313244}
+.ptab{flex:1;min-width:60px;padding:5px 2px;text-align:center;font-size:10px;cursor:pointer;border:none;background:none;color:#6c7086;transition:all .15s;white-space:nowrap}
+.ptab.active{color:#cdd6f4;border-bottom:2px solid #cba6f7}
+#block-list{flex:1;overflow-y:auto;padding:6px}
+.block{padding:5px 9px;border-radius:6px;margin:2px 0;cursor:grab;font-size:11px;user-select:none;display:flex;align-items:center;gap:5px;transition:opacity .15s}
+.block:hover{opacity:.8}
+.block:active{cursor:grabbing}
+.motion{background:#4c97ff;color:#fff}
+.looks{background:#9966ff;color:#fff}
+.sound{background:#cf63cf;color:#fff}
+.events{background:#ffab19;color:#222}
+.control{background:#ffab19;color:#222}
+.sensing{background:#5cb1d6;color:#fff}
+.operators{background:#59c059;color:#fff}
+.variables{background:#ff8c1a;color:#fff}
+.hat-block{border-radius:14px 14px 6px 6px}
+#workspace-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#wtabs{display:flex;background:#181825;border-bottom:1px solid #313244;padding:0 8px}
+.wtab{padding:7px 14px;font-size:12px;cursor:pointer;color:#6c7086;border-bottom:2px solid transparent;transition:all .15s}
+.wtab.active{color:#cdd6f4;border-bottom-color:#cba6f7}
+#workspace{flex:1;position:relative;background:#11111b;overflow:hidden;cursor:default}
+.script-wrap{position:absolute;z-index:10;cursor:move}
+.script-block{background:#313244;border:1px solid #45475a;border-radius:8px;padding:4px;min-width:160px;box-shadow:0 2px 8px #0004}
+.sb-inner{padding:5px 9px;border-radius:5px;font-size:11px;margin:1px 0;color:#fff;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.sb-inner input{background:#1e1e2e;border:1px solid #585b70;color:#cdd6f4;padding:2px 5px;border-radius:4px;font-size:10px;width:45px}
+.peer-block-outline{border:2px solid transparent;border-radius:8px}
+.trash-hint{position:absolute;bottom:12px;right:12px;width:44px;height:44px;background:#f38ba820;border:2px dashed #f38ba860;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;opacity:.4;pointer-events:none}
+.cursor-label{position:absolute;pointer-events:none;z-index:500;transition:left .08s,top .08s}
+.cursor-dot{width:10px;height:10px;border-radius:50%;border:2px solid #fff}
+.cursor-name{font-size:9px;font-weight:600;padding:2px 5px;border-radius:4px;margin-top:2px;white-space:nowrap}
+#right{width:330px;background:#181825;border-left:1px solid #313244;display:flex;flex-direction:column;flex-shrink:0}
+#stage-wrap{height:195px;background:#000;border-bottom:1px solid #313244;position:relative;overflow:hidden}
+#stage{width:100%;height:100%;position:relative}
+#stage-bg{width:100%;height:100%;position:absolute;top:0;left:0}
+.sprite-el{position:absolute;font-size:30px;cursor:move;user-select:none;transition:none;z-index:10;line-height:1}
+.say-bubble{position:absolute;bottom:110%;left:50%;transform:translateX(-50%);background:#fff;color:#333;padding:3px 8px;border-radius:8px;font-size:10px;white-space:nowrap;border:1px solid #ccc;pointer-events:none}
+#stage-ctrl{position:absolute;top:6px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:20}
+.s-btn{background:#31324499;border:none;color:#cdd6f4;width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
+.s-btn.go{background:#a6e3a1bb;color:#1e1e2e;font-weight:700}
+.s-btn:hover{background:#45475a}
+#sprite-panel{flex:1;overflow:hidden;display:flex;flex-direction:column}
+#sprite-tabs{display:flex;background:#11111b;border-bottom:1px solid #313244}
+.stab{flex:1;padding:5px;text-align:center;font-size:11px;cursor:pointer;background:none;border:none;color:#6c7086}
+.stab.active{color:#cdd6f4;border-bottom:2px solid #cba6f7}
+#sprite-list{display:flex;flex-wrap:wrap;gap:6px;padding:8px;overflow-y:auto}
+.sprite-card{width:68px;background:#313244;border-radius:8px;padding:5px;text-align:center;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.sprite-card:hover{background:#45475a}
+.sprite-card.sel{border-color:#cba6f7}
+.sprite-card .sem{font-size:26px}
+.sprite-card .sn{font-size:9px;color:#6c7086;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.add-card{opacity:.5}
+.add-card:hover{opacity:.8}
+#chat-bar{border-top:1px solid #313244;padding:6px 8px;display:flex;gap:6px;align-items:flex-end}
+#chat-log{max-height:60px;overflow-y:auto;padding:0 8px;font-size:10px;line-height:1.6}
+.chat-msg{color:#bac2de}
+.chat-msg .who{font-weight:600}
+#chat-input{flex:1;background:#11111b;border:1px solid #45475a;color:#cdd6f4;padding:5px 8px;border-radius:6px;font-size:11px;outline:none;resize:none}
+#chat-send{background:#cba6f7;border:none;color:#1e1e2e;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700}
+#ai-fab{position:fixed;bottom:16px;right:16px;width:44px;height:44px;background:#cba6f7;border:none;border-radius:50%;cursor:pointer;font-size:20px;color:#1e1e2e;z-index:998;transition:transform .2s}
+#ai-fab:hover{transform:scale(1.1)}
+#ai-panel{position:fixed;right:0;bottom:0;width:310px;height:400px;background:#1e1e2e;border:1px solid #45475a;border-radius:12px 0 0 0;display:flex;flex-direction:column;z-index:999;transition:transform .3s}
+#ai-panel.hidden{transform:translateY(110%)}
+.ai-head{padding:9px 12px;background:#313244;display:flex;align-items:center;gap:8px;border-radius:12px 0 0 0}
+.ai-head span{font-weight:600;font-size:12px;color:#cba6f7}
+#ai-msgs{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:7px}
+.aimsg{padding:7px 9px;border-radius:8px;font-size:11px;line-height:1.5;max-width:96%}
+.aimsg.u{background:#313244;margin-left:auto;color:#cdd6f4}
+.aimsg.a{background:#181825;border:1px solid #313244;color:#cdd6f4}
+.ai-lbl{font-size:9px;color:#cba6f7;font-weight:700;margin-bottom:2px}
+.dot{width:5px;height:5px;background:#cba6f7;border-radius:50%;animation:bop .7s infinite alternate}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes bop{to{transform:translateY(-5px)}}
+.thinking{display:flex;gap:3px;align-items:center;padding:7px 9px}
+#ai-inp-row{padding:6px;display:flex;gap:5px;border-top:1px solid #313244}
+#ai-inp{flex:1;background:#313244;border:1px solid #45475a;color:#cdd6f4;padding:6px 8px;border-radius:7px;font-size:11px;resize:none;outline:none}
+#ai-inp:focus{border-color:#cba6f7}
+#ai-go{background:#cba6f7;border:none;color:#1e1e2e;padding:6px 10px;border-radius:7px;cursor:pointer;font-size:11px;font-weight:700}
+.block-sug{background:#313244;border:1px solid #45475a;border-radius:5px;padding:5px 8px;margin:3px 0;font-size:10px;cursor:pointer;color:#cdd6f4;transition:background .15s}
+.block-sug:hover{background:#45475a}
+#toast{position:fixed;top:46px;left:50%;transform:translateX(-50%);background:#a6e3a1;color:#1e1e2e;padding:6px 16px;border-radius:7px;font-size:11px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9999}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:#11111b}::-webkit-scrollbar-thumb{background:#45475a;border-radius:2px}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="logo">⬛ Scratch+</div>
+  <div class="sep"></div>
+  <button class="tbtn green" onclick="runProject()">▶ Run</button>
+  <button class="tbtn red" onclick="stopProject()">■ Stop</button>
+  <div class="sep"></div>
+  <button class="tbtn" onclick="addSprite()">+ Sprite</button>
+  <button class="tbtn blue" onclick="exportSB3()">⬇ .sb3</button>
+  <button class="tbtn purple" onclick="openAI()">✨ AI</button>
+  <div id="room-section">
+    <div class="status-dot connecting" id="net-dot"></div>
+    <span id="net-label" style="font-size:10px;color:#6c7086">not connected</span>
+    <div class="peer-list" id="peer-list"></div>
+    <button class="tbtn" onclick="openJoinModal()" id="room-btn">🔗 Multiplayer</button>
+  </div>
+</div>
+
+<div id="join-modal">
+  <div class="modal-card">
+    <h2>🔗 Multiplayer</h2>
+    <p>Create or join a room to code together in real time.</p>
+    <div class="mrow"><label>Your Name</label><input id="inp-name" placeholder="e.g. Alex" maxlength="16"/></div>
+    <button class="tbtn purple" style="width:100%;padding:9px;font-size:13px;font-weight:700" onclick="createRoom()">✦ Create New Room</button>
+    <div class="or-divider">or join existing</div>
+    <div class="mrow"><label>Room Code</label><input id="inp-room" placeholder="e.g. XKCD42" maxlength="8" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"/></div>
+    <div class="modal-btns">
+      <button class="mbtn-join" onclick="joinRoom()">Join Room</button>
+      <button class="mbtn-cancel" onclick="closeJoinModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="main">
+  <div id="palette">
+    <div class="ptabs" id="ptabs">
+      <button class="ptab active" onclick="showCat('motion',this)">Motion</button>
+      <button class="ptab" onclick="showCat('looks',this)">Looks</button>
+      <button class="ptab" onclick="showCat('events',this)">Events</button>
+      <button class="ptab" onclick="showCat('control',this)">Control</button>
+      <button class="ptab" onclick="showCat('ops',this)">Ops</button>
+    </div>
+    <div id="block-list"></div>
+  </div>
+
+  <div id="workspace-wrap">
+    <div id="wtabs">
+      <div class="wtab active">Code</div>
+      <div class="wtab">Costumes</div>
+      <div class="wtab">Sounds</div>
+    </div>
+    <div id="workspace" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
+      <div class="trash-hint">🗑</div>
+    </div>
+  </div>
+
+  <div id="right">
+    <div id="stage-wrap">
+      <div id="stage"><canvas id="stage-bg"></canvas></div>
+      <div id="stage-ctrl">
+        <button class="s-btn go" onclick="runProject()">▶</button>
+        <button class="s-btn" onclick="stopProject()">■</button>
+      </div>
+    </div>
+    <div id="sprite-panel">
+      <div id="sprite-tabs">
+        <button class="stab active">Sprites</button>
+        <button class="stab">Backdrops</button>
+      </div>
+      <div id="sprite-list"></div>
+    </div>
+    <div id="chat-log"></div>
+    <div id="chat-bar">
+      <textarea id="chat-input" rows="1" placeholder="Chat with room..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea>
+      <button id="chat-send" onclick="sendChat()">↑</button>
+    </div>
+  </div>
+</div>
+
+<div id="ai-panel" class="hidden">
+  <div class="ai-head">
+    <span>✨</span>
+    <span>AI Assistant</span>
+    <button onclick="closeAI()" style="margin-left:auto;background:none;border:none;color:#6c7086;cursor:pointer;font-size:14px">✕</button>
+  </div>
+  <div id="ai-msgs">
+    <div class="aimsg a">
+      <div class="ai-lbl">Scratch AI</div>
+      Hi! Ask me anything — I can suggest blocks, explain concepts, or help debug your scripts!
+    </div>
+  </div>
+  <div id="ai-inp-row">
+    <textarea id="ai-inp" rows="2" placeholder="Ask about your code..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAI()}"></textarea>
+    <button id="ai-go" onclick="sendAI()">Go</button>
+  </div>
+</div>
+
+<button id="ai-fab" onclick="openAI()">✨</button>
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+// =====================================================================
+// BLOCK DEFINITIONS
+// =====================================================================
+const CATS = {
+  motion:[
+    {id:'move',label:'Move',cat:'motion',icon:'🚶',inputs:[{n:'steps',v:'10',w:36}]},
+    {id:'turn_r',label:'Turn right',cat:'motion',icon:'↷',inputs:[{n:'deg',v:'15',w:32}]},
+    {id:'turn_l',label:'Turn left',cat:'motion',icon:'↶',inputs:[{n:'deg',v:'15',w:32}]},
+    {id:'goto_xy',label:'Go to x: y:',cat:'motion',icon:'📍',inputs:[{n:'x',v:'0',w:32},{n:'y',v:'0',w:32}]},
+    {id:'glide',label:'Glide secs to x: y:',cat:'motion',icon:'🌊',inputs:[{n:'secs',v:'1',w:28},{n:'x',v:'0',w:32},{n:'y',v:'0',w:32}]},
+    {id:'set_x',label:'Set x to',cat:'motion',icon:'↔',inputs:[{n:'x',v:'0',w:36}]},
+    {id:'set_y',label:'Set y to',cat:'motion',icon:'↕',inputs:[{n:'y',v:'0',w:36}]},
+    {id:'bounce',label:'If on edge, bounce',cat:'motion',icon:'🏓',inputs:[]},
+    {id:'point_dir',label:'Point in direction',cat:'motion',icon:'🧭',inputs:[{n:'dir',v:'90',w:36}]},
+  ],
+  looks:[
+    {id:'say',label:'Say',cat:'looks',icon:'💬',inputs:[{n:'msg',v:'Hello!',w:60}]},
+    {id:'say_for',label:'Say for secs',cat:'looks',icon:'💬',inputs:[{n:'msg',v:'Hi!',w:50},{n:'secs',v:'2',w:28}]},
+    {id:'think',label:'Think',cat:'looks',icon:'💭',inputs:[{n:'msg',v:'Hmm...',w:60}]},
+    {id:'show',label:'Show',cat:'looks',icon:'👁',inputs:[]},
+    {id:'hide',label:'Hide',cat:'looks',icon:'🙈',inputs:[]},
+    {id:'set_size',label:'Set size to %',cat:'looks',icon:'📏',inputs:[{n:'size',v:'100',w:36}]},
+    {id:'change_color',label:'Change color effect by',cat:'looks',icon:'🎨',inputs:[{n:'val',v:'25',w:32}]},
+    {id:'clear_effects',label:'Clear graphic effects',cat:'looks',icon:'✨',inputs:[]},
+    {id:'next_costume',label:'Next costume',cat:'looks',icon:'👗',inputs:[]},
+  ],
+  events:[
+    {id:'when_flag',label:'When flag clicked',cat:'events',icon:'🚩',hat:true,inputs:[]},
+    {id:'when_key',label:'When key pressed',cat:'events',icon:'⌨',hat:true,inputs:[{n:'key',v:'space',w:40}]},
+    {id:'when_click',label:'When sprite clicked',cat:'events',icon:'🖱',hat:true,inputs:[]},
+    {id:'broadcast',label:'Broadcast',cat:'events',icon:'📡',inputs:[{n:'msg',v:'msg1',w:40}]},
+    {id:'when_receive',label:'When I receive',cat:'events',icon:'📨',hat:true,inputs:[{n:'msg',v:'msg1',w:40}]},
+  ],
+  control:[
+    {id:'wait',label:'Wait secs',cat:'control',icon:'⏱',inputs:[{n:'secs',v:'1',w:32}]},
+    {id:'repeat',label:'Repeat',cat:'control',icon:'🔁',inputs:[{n:'n',v:'10',w:32}]},
+    {id:'forever',label:'Forever',cat:'control',icon:'♾',inputs:[]},
+    {id:'if_then',label:'If <> then',cat:'control',icon:'❓',inputs:[]},
+    {id:'if_else',label:'If <> else',cat:'control',icon:'🔀',inputs:[]},
+    {id:'stop_all',label:'Stop all',cat:'control',icon:'🛑',inputs:[]},
+    {id:'create_clone',label:'Create clone of myself',cat:'control',icon:'👯',inputs:[]},
+  ],
+  ops:[
+    {id:'add',label:'add',cat:'operators',icon:'➕',inputs:[{n:'a',v:'0',w:32},{n:'b',v:'0',w:32}]},
+    {id:'sub',label:'subtract',cat:'operators',icon:'➖',inputs:[{n:'a',v:'0',w:32},{n:'b',v:'0',w:32}]},
+    {id:'mul',label:'multiply',cat:'operators',icon:'✖',inputs:[{n:'a',v:'1',w:32},{n:'b',v:'1',w:32}]},
+    {id:'div',label:'divide',cat:'operators',icon:'➗',inputs:[{n:'a',v:'1',w:32},{n:'b',v:'1',w:32}]},
+    {id:'rand',label:'Random to',cat:'operators',icon:'🎲',inputs:[{n:'lo',v:'1',w:28},{n:'hi',v:'10',w:28}]},
+    {id:'join',label:'Join',cat:'operators',icon:'🔗',inputs:[{n:'a',v:'hello ',w:45},{n:'b',v:'world',w:40}]},
+    {id:'gt',label:'greater than',cat:'operators',icon:'>',inputs:[{n:'a',v:'',w:28},{n:'b',v:'',w:28}]},
+    {id:'lt',label:'less than',cat:'operators',icon:'<',inputs:[{n:'a',v:'',w:28},{n:'b',v:'',w:28}]},
+    {id:'eq',label:'equals',cat:'operators',icon:'=',inputs:[{n:'a',v:'',w:28},{n:'b',v:'',w:28}]},
+    {id:'and',label:'and',cat:'operators',icon:'&&',inputs:[]},
+    {id:'or',label:'or',cat:'operators',icon:'||',inputs:[]},
+    {id:'not',label:'not',cat:'operators',icon:'!',inputs:[]},
+  ],
+};
+
+const EMOJIS = ['🐱','🐶','🦊','🐸','🐧','🦋','🐝','🦄','🐉','🦖','🐠','🦑','🚀','⭐','🌸','🦁','🐼','🐨','🦓','🐳'];
+const PEER_COLORS = ['#f38ba8','#a6e3a1','#89b4fa','#f9e2af','#cba6f7','#94e2d5','#fab387'];
+
+// =====================================================================
+// STATE
+// =====================================================================
+let G = {
+  sprites: [
+    {id:'s1',name:'Sprite1',emoji:'🐱',x:60,y:60,size:100,visible:true,dir:90,scripts:[],say:''},
+  ],
+  selSprite: 's1',
+  blockCtr: 1000,
+  running: false,
+  myName: '',
+  myColor: '',
+  room: null,
+  peers: {},
+  myId: Math.random().toString(36).slice(2,8),
+};
+
+let peer = null;
+let connections = {};
+
+// =====================================================================
+// PALETTE
+// =====================================================================
+function showCat(cat, btn) {
+  document.querySelectorAll('.ptab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const list = document.getElementById('block-list');
+  list.innerHTML = '';
+  (CATS[cat] || []).forEach(b => {
+    const el = document.createElement('div');
+    el.className = 'block ' + b.cat + (b.hat ? ' hat-block' : '');
+    el.draggable = true;
+    el.dataset.bid = b.id;
+    let html = `<span>${b.icon || ''}</span><span>${b.label}</span>`;
+    (b.inputs || []).forEach(i => {
+      html += `<input style="width:${i.w}px" value="${i.v}" readonly onclick="event.stopPropagation()"/>`;
+    });
+    el.innerHTML = html;
+    el.addEventListener('dragstart', ev => {
+      ev.dataTransfer.setData('bid', b.id);
+    });
+    list.appendChild(el);
+  });
+}
+
+// =====================================================================
+// WORKSPACE
+// =====================================================================
+function handleDrop(ev) {
+  ev.preventDefault();
+  const bid = ev.dataTransfer.getData('bid');
+  if (!bid) return;
+  const ws = document.getElementById('workspace');
+  const r = ws.getBoundingClientRect();
+  addBlock(bid, ev.clientX - r.left - 80, ev.clientY - r.top - 15, null, true);
+}
+
+function allBlocks() {
+  return Object.values(CATS).flat();
+}
+
+function addBlock(bid, x, y, overrideId, broadcast) {
+  const def = allBlocks().find(b => b.id === bid);
+  if (!def) return;
+  const uid = overrideId || ('blk' + (++G.blockCtr));
+  const ws = document.getElementById('workspace');
+  const wrap = document.createElement('div');
+  wrap.className = 'script-wrap peer-block-outline';
+  wrap.id = uid;
+  wrap.style.left = Math.max(0, x) + 'px';
+  wrap.style.top = Math.max(0, y) + 'px';
+
+  const sb = document.createElement('div');
+  sb.className = 'script-block';
+  const inner = document.createElement('div');
+  inner.className = 'sb-inner ' + def.cat + (def.hat ? ' hat-block' : '');
+  let html = `<span>${def.icon || ''}</span><span>${def.label}</span>`;
+  (def.inputs || []).forEach(i => {
+    html += `<input data-inp="${i.n}" value="${i.v}" style="width:${i.w}px" title="${i.n}" onchange="onInputChange(this,'${uid}')">`;
+  });
+  inner.innerHTML = html;
+  sb.appendChild(inner);
+  wrap.appendChild(sb);
+  makeDraggable(wrap, uid);
+  ws.appendChild(wrap);
+
+  const spr = G.sprites.find(s => s.id === G.selSprite);
+  if (spr) spr.scripts.push({ uid, bid, x, y, inputs: getInputVals(uid) });
+
+  if (broadcast) broadcastOp({ type: 'add_block', bid, x, y, uid, sprId: G.selSprite });
+  return uid;
+}
+
+function getInputVals(uid) {
+  const el = document.getElementById(uid);
+  if (!el) return {};
+  const res = {};
+  el.querySelectorAll('input[data-inp]').forEach(i => res[i.dataset.inp] = i.value);
+  return res;
+}
+
+function onInputChange(inp, uid) {
+  const spr = G.sprites.find(s => s.scripts.find(sc => sc.uid === uid));
+  if (spr) {
+    const sc = spr.scripts.find(sc => sc.uid === uid);
+    if (sc) sc.inputs = getInputVals(uid);
+  }
+  broadcastOp({ type: 'update_input', uid, inp: inp.dataset.inp, val: inp.value });
+}
+
+function makeDraggable(el, uid) {
+  let ox, oy, sx, sy;
+  el.addEventListener('mousedown', ev => {
+    if (ev.target.tagName === 'INPUT') return;
+    ev.preventDefault();
+    ox = ev.clientX; oy = ev.clientY;
+    sx = parseInt(el.style.left) || 0;
+    sy = parseInt(el.style.top) || 0;
+    const move = e => {
+      const nx = sx + e.clientX - ox;
+      const ny = sy + e.clientY - oy;
+      el.style.left = nx + 'px';
+      el.style.top = ny + 'px';
+      broadcastCursor(e.clientX, e.clientY);
+      broadcastOp({ type: 'move_block', uid, x: nx, y: ny });
+    };
+    const up = e => {
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', up);
+      const nx = sx + e.clientX - ox;
+      const ny = sy + e.clientY - oy;
+      const spr = G.sprites.find(s => s.scripts.find(sc => sc.uid === uid));
+      if (spr) {
+        const sc = spr.scripts.find(sc => sc.uid === uid);
+        if (sc) { sc.x = nx; sc.y = ny; }
+      }
+    };
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+  });
+}
+
+// =====================================================================
+// CURSORS
+// =====================================================================
+document.getElementById('workspace').addEventListener('mousemove', ev => {
+  broadcastCursor(ev.clientX, ev.clientY);
+});
+
+function broadcastCursor(cx, cy) {
+  const ws = document.getElementById('workspace');
+  const r = ws.getBoundingClientRect();
+  broadcastOp({ type: 'cursor', x: cx - r.left, y: cy - r.top });
+}
+
+function renderCursor(peerId, x, y) {
+  const ws = document.getElementById('workspace');
+  let cur = document.getElementById('cur-' + peerId);
+  if (!cur) {
+    cur = document.createElement('div');
+    cur.className = 'cursor-label';
+    cur.id = 'cur-' + peerId;
+    const p = G.peers[peerId];
+    const col = p ? p.color : '#cba6f7';
+    const name = p ? p.name : '?';
+    cur.innerHTML = `<div class="cursor-dot" style="background:${col}"></div><div class="cursor-name" style="background:${col};color:#1e1e2e">${name}</div>`;
+    ws.appendChild(cur);
+  }
+  cur.style.left = x + 'px';
+  cur.style.top = y + 'px';
+}
+
+// =====================================================================
+// STAGE
+// =====================================================================
+function drawBg() {
+  const c = document.getElementById('stage-bg');
+  const w = c.parentElement.offsetWidth;
+  const h = c.parentElement.offsetHeight;
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d');
+  const g = ctx.createLinearGradient(0, 0, 0, h);
+  g.addColorStop(0, '#0f0c29');
+  g.addColorStop(1, '#1a1a3e');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, w, h);
+  for (let i = 0; i < 40; i++) {
+    ctx.fillStyle = `rgba(255,255,255,${Math.random() * .6 + .1})`;
+    ctx.beginPath();
+    ctx.arc(Math.random() * w, Math.random() * h, Math.random() * 1.5 + .3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function renderSprites() {
+  const stage = document.getElementById('stage');
+  stage.querySelectorAll('.sprite-el').forEach(e => e.remove());
+  G.sprites.forEach(s => {
+    if (!s.visible) return;
+    const el = document.createElement('div');
+    el.className = 'sprite-el';
+    el.style.left = s.x + 'px';
+    el.style.top = s.y + 'px';
+    el.style.fontSize = (s.size / 100 * 30) + 'px';
+    el.textContent = s.emoji;
+    if (s.say) {
+      const b = document.createElement('div');
+      b.className = 'say-bubble';
+      b.textContent = s.say;
+      el.appendChild(b);
+    }
+    stage.appendChild(el);
+  });
+}
+
+function renderSpriteList() {
+  const list = document.getElementById('sprite-list');
+  list.innerHTML = '';
+  G.sprites.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'sprite-card' + (s.id === G.selSprite ? ' sel' : '');
+    card.innerHTML = `<div class="sem">${s.emoji}</div><div class="sn">${s.name}</div>`;
+    card.onclick = () => { G.selSprite = s.id; renderSpriteList(); loadScripts(s.id); };
+    list.appendChild(card);
+  });
+  const add = document.createElement('div');
+  add.className = 'sprite-card add-card';
+  add.innerHTML = '<div class="sem">+</div><div class="sn">Add</div>';
+  add.onclick = addSprite;
+  list.appendChild(add);
+}
+
+function loadScripts(sprId) {
+  document.getElementById('workspace').querySelectorAll('.script-wrap').forEach(e => e.remove());
+  const spr = G.sprites.find(s => s.id === sprId);
+  if (!spr) return;
+  spr.scripts.forEach(sc => addBlock(sc.bid, sc.x, sc.y, sc.uid, false));
+}
+
+function addSprite() {
+  const emoji = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+  const id = 's' + Date.now();
+  const spr = {
+    id, name: 'Sprite' + (G.sprites.length + 1),
+    emoji, x: 50 + Math.random() * 150, y: 50 + Math.random() * 80,
+    size: 100, visible: true, dir: 90, scripts: [], say: ''
+  };
+  G.sprites.push(spr);
+  G.selSprite = id;
+  renderSprites();
+  renderSpriteList();
+  loadScripts(id);
+  broadcastOp({ type: 'add_sprite', spr });
+  toast('Sprite added!');
+}
+
+function runProject() {
+  G.running = true;
+  toast('▶ Running!');
+  G.sprites.forEach(s => {
+    s.say = '';
+    s.scripts.forEach(sc => {
+      switch (sc.bid) {
+        case 'move': s.x += 20; break;
+        case 'say': s.say = sc.inputs && sc.inputs.msg ? sc.inputs.msg : 'Hello!';
+          setTimeout(() => { s.say = ''; renderSprites(); }, 2000); break;
+        case 'show': s.visible = true; break;
+        case 'hide': s.visible = false; break;
+        case 'set_size': s.size = parseInt(sc.inputs && sc.inputs.size ? sc.inputs.size : 100); break;
+        case 'bounce': if (s.x > 250) s.x = 20; if (s.y > 150) s.y = 20; break;
+      }
+    });
+  });
+  renderSprites();
+}
+
+function stopProject() {
+  G.running = false;
+  G.sprites.forEach(s => s.say = '');
+  renderSprites();
+  toast('■ Stopped');
+}
+
+// =====================================================================
+// MULTIPLAYER via PeerJS (free WebRTC signaling)
+// =====================================================================
+function loadPeerJS(cb) {
+  if (window.Peer) { cb(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
+  s.onload = cb;
+  s.onerror = () => toast('PeerJS failed to load — check internet connection');
+  document.head.appendChild(s);
+}
+
+function setNetStatus(status, label) {
+  document.getElementById('net-dot').className = 'status-dot ' + status;
+  document.getElementById('net-label').textContent = label;
+}
+
+function openJoinModal() {
+  document.getElementById('join-modal').classList.remove('hidden');
+  document.getElementById('inp-name').focus();
+}
+function closeJoinModal() {
+  document.getElementById('join-modal').classList.add('hidden');
+}
+
+function createRoom() {
+  const name = document.getElementById('inp-name').value.trim();
+  if (!name) { toast('Enter your name first!'); return; }
+  G.myName = name;
+  G.myColor = PEER_COLORS[Math.floor(Math.random() * PEER_COLORS.length)];
+  setNetStatus('connecting', 'connecting…');
+  loadPeerJS(() => {
+    const roomCode = Math.random().toString(36).slice(2, 8).toUpperCase();
+    G.room = roomCode;
+    const peerId = 'scratchplus-' + roomCode + '-host';
+    peer = new Peer(peerId, { debug: 0 });
+    peer.on('open', () => {
+      G.myId = peerId;
+      setNetStatus('connected', 'Room: ' + roomCode);
+      renderPeerList();
+      closeJoinModal();
+      const btn = document.getElementById('room-btn');
+      btn.textContent = '📋 ' + roomCode;
+      btn.onclick = () => {
+        if (navigator.clipboard) navigator.clipboard.writeText(roomCode);
+        toast('Room code copied: ' + roomCode);
+      };
+      toast('✅ Room created! Code: ' + roomCode + ' — share it with friends!');
+    });
+    peer.on('connection', conn => setupConn(conn));
+    peer.on('error', e => {
+      setNetStatus('disconnected', 'error');
+      toast('Connection error: ' + e.type);
+    });
+  });
+}
+
+function joinRoom() {
+  const name = document.getElementById('inp-name').value.trim();
+  const code = document.getElementById('inp-room').value.trim().toUpperCase();
+  if (!name) { toast('Enter your name!'); return; }
+  if (!code || code.length < 4) { toast('Enter a valid room code!'); return; }
+  G.myName = name;
+  G.myColor = PEER_COLORS[Math.floor(Math.random() * PEER_COLORS.length)];
+  G.room = code;
+  setNetStatus('connecting', 'joining ' + code + '…');
+  loadPeerJS(() => {
+    const myPeerId = 'scratchplus-' + code + '-' + G.myId;
+    peer = new Peer(myPeerId, { debug: 0 });
+    peer.on('open', () => {
+      const hostId = 'scratchplus-' + code + '-host';
+      const conn = peer.connect(hostId, { reliable: true, metadata: { name: G.myName, color: G.myColor } });
+      conn.on('open', () => {
+        setupConn(conn);
+        setNetStatus('connected', 'Room: ' + code);
+        closeJoinModal();
+        document.getElementById('room-btn').textContent = '✓ In ' + code;
+        document.getElementById('room-btn').onclick = () => toast('You are in room: ' + code);
+        conn.send(JSON.stringify({ type: 'hello', name: G.myName, color: G.myColor, id: myPeerId }));
+        toast('Joined room ' + code + '!');
+      });
+      conn.on('error', () => {
+        setNetStatus('disconnected', 'failed');
+        toast('Could not reach host. Check the room code!');
+      });
+    });
+    peer.on('connection', conn => setupConn(conn));
+    peer.on('error', () => setNetStatus('disconnected', 'error'));
+  });
+}
+
+function setupConn(conn) {
+  const metadata = conn.metadata || {};
+  const connId = conn.peer;
+  conn.on('open', () => {
+    connections[connId] = conn;
+    if (metadata.name) {
+      G.peers[connId] = { name: metadata.name, color: metadata.color || PEER_COLORS[0], id: connId };
+      renderPeerList();
+      addChatMsg('System', metadata.name + ' joined the room 🎉', '#cba6f7');
+      conn.send(JSON.stringify({
+        type: 'state_sync',
+        sprites: G.sprites,
+        myName: G.myName,
+        myColor: G.myColor,
+        id: peer.id
+      }));
+    }
+  });
+  conn.on('data', data => {
+    try { handleMsg(conn.peer, JSON.parse(data)); } catch (e) {}
+  });
+  conn.on('close', () => {
+    delete connections[connId];
+    const p = G.peers[connId];
+    if (p) {
+      addChatMsg('System', p.name + ' left the room', '#f38ba8');
+      delete G.peers[connId];
+      renderPeerList();
+    }
+    const cur = document.getElementById('cur-' + connId);
+    if (cur) cur.remove();
+  });
+}
+
+function handleMsg(fromId, msg) {
+  switch (msg.type) {
+    case 'hello':
+      G.peers[fromId] = { name: msg.name, color: msg.color || PEER_COLORS[0], id: fromId };
+      renderPeerList();
+      addChatMsg('System', msg.name + ' joined 🎉', '#cba6f7');
+      if (connections[fromId]) {
+        connections[fromId].send(JSON.stringify({
+          type: 'state_sync', sprites: G.sprites, myName: G.myName, myColor: G.myColor, id: peer.id
+        }));
+      }
+      break;
+
+    case 'state_sync':
+      G.sprites = msg.sprites || G.sprites;
+      if (msg.id) G.peers[msg.id] = { name: msg.myName, color: msg.myColor, id: msg.id };
+      renderSprites(); renderSpriteList(); loadScripts(G.selSprite); renderPeerList();
+      break;
+
+    case 'cursor':
+      renderCursor(fromId, msg.x, msg.y);
+      break;
+
+    case 'chat':
+      const p = G.peers[fromId] || { name: '?', color: '#cba6f7' };
+      addChatMsg(p.name, msg.text, p.color);
+      break;
+
+    case 'add_block':
+      if (!document.getElementById(msg.uid)) {
+        let spr = G.sprites.find(s => s.id === msg.sprId);
+        if (!spr) {
+          spr = { id: msg.sprId, name: 'Remote', emoji: '⭐', x: 80, y: 80, size: 100, visible: true, dir: 90, scripts: [], say: '' };
+          G.sprites.push(spr);
+          renderSpriteList();
+        }
+        spr.scripts.push({ uid: msg.uid, bid: msg.bid, x: msg.x, y: msg.y, inputs: {} });
+        if (G.selSprite === msg.sprId) addBlock(msg.bid, msg.x, msg.y, msg.uid, false);
+      }
+      break;
+
+    case 'move_block':
+      const blkEl = document.getElementById(msg.uid);
+      if (blkEl) { blkEl.style.left = msg.x + 'px'; blkEl.style.top = msg.y + 'px'; }
+      G.sprites.forEach(s => {
+        const sc = s.scripts.find(sc => sc.uid === msg.uid);
+        if (sc) { sc.x = msg.x; sc.y = msg.y; }
+      });
+      break;
+
+    case 'update_input':
+      const iEl = document.getElementById(msg.uid);
+      if (iEl) {
+        const inp = iEl.querySelector(`input[data-inp="${msg.inp}"]`);
+        if (inp) inp.value = msg.val;
+      }
+      break;
+
+    case 'add_sprite':
+      if (!G.sprites.find(s => s.id === msg.spr.id)) {
+        G.sprites.push(msg.spr);
+        renderSprites();
+        renderSpriteList();
+      }
+      break;
+  }
+
+  // Host relays to all other peers
+  Object.entries(connections).forEach(([id, conn]) => {
+    if (id !== fromId && msg.type !== 'hello' && msg.type !== 'state_sync') {
+      try { conn.send(JSON.stringify({ ...msg, _from: fromId })); } catch (e) {}
+    }
+  });
+}
+
+function broadcastOp(obj) {
+  if (!peer) return;
+  const data = JSON.stringify(obj);
+  Object.values(connections).forEach(c => { try { c.send(data); } catch (e) {} });
+}
+
+function renderPeerList() {
+  const list = document.getElementById('peer-list');
+  list.innerHTML = '';
+  if (G.myName) {
+    const av = document.createElement('div');
+    av.className = 'avatar';
+    av.style.background = G.myColor || '#cba6f7';
+    av.style.color = '#1e1e2e';
+    av.textContent = G.myName.slice(0, 2).toUpperCase();
+    av.innerHTML += `<div class="avatar-tip">${G.myName} (you)</div>`;
+    list.appendChild(av);
+  }
+  Object.values(G.peers).forEach(p => {
+    const av = document.createElement('div');
+    av.className = 'avatar';
+    av.style.background = p.color || '#89b4fa';
+    av.style.color = '#1e1e2e';
+    av.textContent = (p.name || '?').slice(0, 2).toUpperCase();
+    av.innerHTML += `<div class="avatar-tip">${p.name}</div>`;
+    list.appendChild(av);
+  });
+}
+
+function sendChat() {
+  const inp = document.getElementById('chat-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  addChatMsg(G.myName || 'You', text, G.myColor || '#cba6f7');
+  broadcastOp({ type: 'chat', text });
+}
+
+function addChatMsg(who, text, color) {
+  const log = document.getElementById('chat-log');
+  const div = document.createElement('div');
+  div.className = 'chat-msg';
+  div.innerHTML = `<span class="who" style="color:${color || '#cba6f7'}">${who}:</span> ${text}`;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+// =====================================================================
+// EXPORT SB3
+// =====================================================================
+function exportSB3() {
+  const opmap = {
+    move:'motion_movesteps', turn_r:'motion_turnright', turn_l:'motion_turnleft',
+    goto_xy:'motion_gotoxy', glide:'motion_glidesecstoxy', set_x:'motion_setx',
+    set_y:'motion_sety', bounce:'motion_ifonedgebounce', point_dir:'motion_pointindirection',
+    say:'looks_say', say_for:'looks_sayforsecs', think:'looks_think', show:'looks_show',
+    hide:'looks_hide', set_size:'looks_setsizeto', change_color:'looks_changeeffectby',
+    clear_effects:'looks_cleargraphiceffects', next_costume:'looks_nextcostume',
+    when_flag:'event_whenflagclicked', when_key:'event_whenkeypressed',
+    when_click:'event_whenthisspriteclicked', broadcast:'event_broadcast',
+    when_receive:'event_whenbroadcastreceived', wait:'control_wait',
+    repeat:'control_repeat', forever:'control_forever', if_then:'control_if',
+    if_else:'control_if_else', stop_all:'control_stop', create_clone:'control_create_clone_of',
+    add:'operator_add', sub:'operator_subtract', mul:'operator_multiply',
+    div:'operator_divide', rand:'operator_random', join:'operator_join',
+    gt:'operator_gt', lt:'operator_lt', eq:'operator_equals',
+    and:'operator_and', or:'operator_or', not:'operator_not',
+  };
+
+  const targets = [{
+    isStage: true, name: 'Stage', variables: {}, lists: {}, broadcasts: {}, blocks: {}, comments: {},
+    currentCostume: 0,
+    costumes: [{
+      assetId: 'cd21514d7a9f86e8a6f66805f1e3a3b4', name: 'backdrop1',
+      md5ext: 'cd21514d7a9f86e8a6f66805f1e3a3b4.svg',
+      rotationCenterX: 240, rotationCenterY: 180, bitmapResolution: 1, dataFormat: 'svg'
+    }],
+    sounds: [], volume: 100, layerOrder: 0, tempo: 60, videoTransparency: 50,
+    videoState: 'on', textToSpeechLanguage: null
+  }];
+
+  G.sprites.forEach((s, i) => {
+    const blocks = {};
+    s.scripts.forEach((sc, j) => {
+      const opcode = opmap[sc.bid] || ('motion_' + sc.bid);
+      const inputs = {};
+      if (sc.inputs) {
+        Object.entries(sc.inputs).forEach(([k, v]) => {
+          inputs[k.toUpperCase()] = [[1, [10, v]]];
+        });
+      }
+      blocks[sc.uid] = {
+        opcode, next: null, parent: null,
+        inputs, fields: {}, shadow: false, topLevel: true,
+        x: sc.x, y: sc.y
+      };
+    });
+    targets.push({
+      isStage: false, name: s.name, variables: {}, lists: {}, broadcasts: {},
+      blocks, comments: {}, currentCostume: 0,
+      costumes: [{
+        assetId: 'bcf454acf82e4ae3c854f6fec4e03c7c', name: 'costume1',
+        md5ext: 'bcf454acf82e4ae3c854f6fec4e03c7c.svg',
+        rotationCenterX: 48, rotationCenterY: 50, bitmapResolution: 1, dataFormat: 'svg'
+      }],
+      sounds: [], volume: 100, layerOrder: i + 1,
+      visible: s.visible, x: s.x - 240, y: 180 - s.y,
+      size: s.size, direction: s.dir, draggable: false, rotationStyle: 'all around'
+    });
+  });
+
+  const proj = JSON.stringify({
+    targets, monitors: [], extensions: [],
+    meta: { semver: '3.0.0', vm: '0.2.0', agent: 'ScratchPlus/1.0' }
+  });
+
+  if (window.JSZip) {
+    const zip = new JSZip();
+    zip.file('project.json', proj);
+    const svgBlank = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360"><rect width="480" height="360" fill="#4C97FF"/></svg>';
+    const catSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 95 100"><text y="80" font-size="80">🐱</text></svg>';
+    zip.file('cd21514d7a9f86e8a6f66805f1e3a3b4.svg', svgBlank);
+    zip.file('bcf454acf82e4ae3c854f6fec4e03c7c.svg', catSvg);
+    zip.generateAsync({ type: 'blob', mimeType: 'application/x.scratch.sb3' }).then(blob => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'project.sb3';
+      a.click();
+      toast('Exported project.sb3!');
+    });
+  } else {
+    const a = document.createElement('a');
+    a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(proj);
+    a.download = 'project.json';
+    a.click();
+    toast('Exported project.json (JSZip not ready)');
+  }
+}
+
+// =====================================================================
+// AI ASSISTANT
+// =====================================================================
+function openAI() { document.getElementById('ai-panel').classList.remove('hidden'); }
+function closeAI() { document.getElementById('ai-panel').classList.add('hidden'); }
+
+async function sendAI() {
+  const inp = document.getElementById('ai-inp');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  inp.value = '';
+  const msgs = document.getElementById('ai-msgs');
+
+  const u = document.createElement('div');
+  u.className = 'aimsg u';
+  u.textContent = msg;
+  msgs.appendChild(u);
+
+  const th = document.createElement('div');
+  th.className = 'thinking';
+  th.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+  msgs.appendChild(th);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  const spr = G.sprites.find(s => s.id === G.selSprite);
+  const ctx = `You are an AI assistant inside "Scratch+" — a Scratch-like block programming editor. The user is coding with ${G.sprites.length} sprite(s). Selected sprite: "${spr ? spr.name : '?'}". Available blocks include: Motion (move, turn, go to xy, glide, bounce, point in direction), Looks (say, think, show, hide, set size, color effects), Events (when flag clicked, when key pressed, when sprite clicked, broadcast/receive), Control (wait, repeat, forever, if/else, stop, clone), Operators (math, comparison, logic, join, random). Keep answers concise and friendly. When suggesting block sequences, name the specific blocks to use and in what order.`;
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 800,
+        system: ctx,
+        messages: [{ role: 'user', content: msg }]
+      })
+    });
+    const d = await r.json();
+    const reply = d.content?.[0]?.text || 'Sorry, I had trouble. Try again!';
+    th.remove();
+
+    const a = document.createElement('div');
+    a.className = 'aimsg a';
+    a.innerHTML = `<div class="ai-lbl">Scratch AI</div>${reply.replace(/\n/g, '<br>')}`;
+
+    const matched = [];
+    allBlocks().forEach(b => {
+      if (reply.toLowerCase().includes(b.label.toLowerCase().slice(0, 6)) && matched.length < 3)
+        matched.push(b);
+    });
+    if (matched.length) {
+      const sg = document.createElement('div');
+      sg.style.marginTop = '7px';
+      sg.innerHTML = '<div style="font-size:9px;color:#cba6f7;margin-bottom:3px">Suggested blocks — click to add:</div>';
+      matched.forEach(b => {
+        const btn = document.createElement('div');
+        btn.className = 'block-sug';
+        btn.innerHTML = `${b.icon} ${b.label} <span style="float:right;opacity:.6">+ add</span>`;
+        btn.onclick = () => { addBlock(b.id, 80 + Math.random() * 200, 60 + Math.random() * 120, null, true); toast('Block added!'); };
+        sg.appendChild(btn);
+      });
+      a.appendChild(sg);
+    }
+    msgs.appendChild(a);
+  } catch (e) {
+    th.remove();
+    const a = document.createElement('div');
+    a.className = 'aimsg a';
+    a.innerHTML = `<div class="ai-lbl">Scratch AI</div>Try asking: "How do I make a sprite move?" or "How do I keep score?" or "What does the forever block do?"`;
+    msgs.appendChild(a);
+  }
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// =====================================================================
+// TOAST
+// =====================================================================
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.style.opacity = '0', 2400);
+}
+
+// =====================================================================
+// INIT
+// =====================================================================
+showCat('motion', document.querySelector('.ptab.active'));
+drawBg();
+renderSprites();
+renderSpriteList();
+setTimeout(() => {
+  addBlock('when_flag', 30, 30, null, false);
+  addBlock('move', 30, 78, null, false);
+  addBlock('say', 30, 126, null, false);
+}, 50);
+</script>
+</body>
+</html>
